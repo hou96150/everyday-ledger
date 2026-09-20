@@ -1,0 +1,27 @@
+name: 錯誤回報 / Bug report
+description: 使用假資料提供重現流程 / Reproduce with fictional data
+body:
+  - type: markdown
+    attributes:
+      value: "請勿貼上密碼、設定碼或真實帳本。安全問題請用私密通報。 / No secrets or real records; report security issues privately."
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 操作步驟 / Steps to reproduce
+      placeholder: "例：試用版 → 咖啡店 → 新增商品 → …"
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: 預期與實際結果 / Expected and actual behavior
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: 裝置、瀏覽器、線上或離線 / Device, browser, online or offline
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 截圖或錯誤訊息（請遮蔽私密資料）/ Redacted screenshots or errors

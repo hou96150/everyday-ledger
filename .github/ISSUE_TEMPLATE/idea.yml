@@ -1,0 +1,19 @@
+name: 店務情境與建議 / Shop scenario or idea
+description: 告訴我們你在什麼情況需要什麼 / Describe the job to be done
+body:
+  - type: textarea
+    id: scenario
+    attributes:
+      label: 你的店務情境 / Your shop scenario
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: 目前遇到的困難與現有做法 / Problem and current workaround
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: 怎樣算是解決了？ / What would a good outcome look like?

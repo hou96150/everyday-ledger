@@ -1,0 +1,43 @@
+# 驗證紀錄 / Verification
+
+## 繁體中文
+
+日期：2026-09-20。此文件區分可重跑測試、開發時人工驗證與尚未完成的驗收。
+
+### 可重跑
+
+`npm ci` → `npm test` → `npm run build`。GitHub Actions 在 push 與 PR 執行相同檢查。
+
+| 測試檔            | 範圍                                                                  |
+| ----------------- | --------------------------------------------------------------------- |
+| `domain.test.ts`  | 金額、庫存、分店統計、退款與輸入規則                                  |
+| `storage.test.ts` | 本機存取、歷史與版本處理                                              |
+| `server.test.ts`  | PGlite 執行 SQL；授權、重送、衝突、退款、直接寫入拒絕                 |
+| `sync.test.ts`    | 佇列到 PostgreSQL 的整合、回應遺失重送、過期登入、衝突再次變更        |
+| `demo.test.ts`    | 公開模式禁用雲端 client；示範資料只植入一次且不覆蓋修改、不入上傳佇列 |
+
+目前合計 29 個測試。既有測試可能依同檔內順序建構情境；PGlite 提供資料庫引擎，並不包含完整 Supabase Auth 或 Edge runtime。
+
+### 開發時已驗證
+
+- 原始獨立部署的 Supabase API：未授權拒絕、單次帳號開通、密碼登入、操作重送不重複、版本衝突、進貨付款、部分退款、拒絕超額退款、第二個 client 讀取、歷史、禁止直接寫表。臨時 QA 帳號與資料已在啟用前清理；此紀錄不宣稱現在家庭資料庫仍是空白。
+- 瀏覽器：商品期初 10，售出 2 後 8，進貨 5 後 13，退回 1 後 14。
+- 離線：儲存完成後重開頁面，交易仍在本機。真正兩台店內裝置跨網路同步仍需使用者驗收。
+- Excel：下載後以 ExcelJS 重新讀取，確認 6 張工作表與兩店合計。
+- 手機：390px 版面無橫向溢出，實際畫面已檢視。截圖全部為示範資料。
+
+### 尚未證明
+
+沒有長期真實營業數據、負載測試、外部滲透測試或正式無障礙認證。不保證瀏覽器永不清除資料、不保證關閉後背景同步、不提供備份還原承諾。免費主機可用性與限制不屬於本專案的服務保證。依賴通報見 [SECURITY.md](../SECURITY.md)。
+
+## English
+
+Recorded on 2026-09-20. Reproducible tests, development checks and outstanding acceptance are intentionally separated.
+
+Run `npm ci`, `npm test`, and `npm run build`. CI repeats them for pushes and pull requests. The five test files cover domain arithmetic/validation, device persistence/history, SQL authorization and idempotency, outbox-to-PostgreSQL integration, repeated conflicts, expired sessions, and cloud-disabled demo seeding. There are currently 29 tests. Some database scenarios share ordered state; PGlite does not provide the complete Supabase Auth/Edge platform.
+
+Development verification included actual Supabase bootstrap/login, unauthorized rejection, idempotency, conflicts, purchases/payments, partial and excessive refunds, a second client, history and denied direct writes. Disposable QA records/accounts were cleaned up before household activation; this is not a claim about the current household database.
+
+Browser checks observed stock 10 → 8 after selling two → 13 after receiving five → 14 after restocking one return. Saved offline entries survived reopening. An exported workbook was read back to check six worksheets and combined totals. Mobile layout was inspected at 390px without horizontal overflow; all published screenshots use fictional data.
+
+Two actual shop devices still need acceptance across disconnect/reconnect conditions. There are no long-term operating metrics, load-test results, independent penetration tests or accessibility certification. Browser storage eviction, closed-app background sync and backup restoration are not guaranteed. Hosting-provider availability and free-tier limits are not a project SLA. See [Security](../SECURITY.md) for dependencies.

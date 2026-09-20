@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+test-results/
+playwright-report/
+.wrangler/
+private/
+.playwright-cli/
+*.tsbuildinfo
+output/
+deployment.json
+STATUS.md
+*.log
