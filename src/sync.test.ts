@@ -38,7 +38,13 @@ vi.mock("@supabase/supabase-js", () => ({
     },
     from: () => ({
       select: () => ({
-        eq: (_key:string,id:string)=>({maybeSingle:async()=>({data:(await transport.query()).find((r:any)=>r.id===id)||null,error:null})}),
+        eq: (_key: string, id: string) => ({
+          maybeSingle: async () => ({
+            data:
+              (await transport.query()).find((r: any) => r.id === id) || null,
+            error: null,
+          }),
+        }),
         order: () => ({
           range: async () => ({ data: await transport.query(), error: null }),
         }),
@@ -192,23 +198,112 @@ describe("本機佇列到 PostgreSQL 的整合", () => {
       (await transport.query()).find((r: any) => r.id === productId).data.price,
     ).toBe(550);
   });
-  it('保留本機版本會以已確認的雲端版本重新提交',async()=>{
-    const op=(await storage.db.outbox.toArray()).find(o=>o.record.id===saleId)!;
-    await storage.resolve(op,true);await storage.sync(owner);
-    expect(await storage.db.outbox.count()).toBe(0);
-    expect((await transport.query()).find((r:any)=>r.id===saleId).data.note).toBe('第一台修改');
-  });
-  it('核對期間雲端再更新，不會直接覆蓋未看過的新版本',async()=>{
-    const local=(await storage.db.records.get(saleId))!;
-    await storage.save({...local,data:{...local.data as import('./domain').Entry,note:'本機待核對'}});
-    await transport.rpc({p_op:crypto.randomUUID(),p_id:saleId,p_kind:'entry',p_base:local.version,p_data:{...local.data,note:'雲端版本一'}});
+  it("保留本機版本會以已確認的雲端版本重新提交", async () => {
+    const op = (await storage.db.outbox.toArray()).find(
+      (o) => o.record.id === saleId,
+    )!;
+    await storage.resolve(op, true);
     await storage.sync(owner);
-    const op=(await storage.db.outbox.toArray()).find(o=>o.record.id===saleId)!;
-    await transport.rpc({p_op:crypto.randomUUID(),p_id:saleId,p_kind:'entry',p_base:local.version+1,p_data:{...local.data,note:'雲端版本二'}});
-    await storage.resolve(op,true);
-    const updated=(await storage.db.outbox.get(op.id))!;
-    expect((updated.remote!.data as import('./domain').Entry).note).toBe('雲端版本二');
-    expect(updated.error).toContain('再次核對');
-    expect((await transport.query()).find((r:any)=>r.id===saleId).data.note).toBe('雲端版本二');
+    expect(await storage.db.outbox.count()).toBe(0);
+    expect(
+      (await transport.query()).find((r: any) => r.id === saleId).data.note,
+    ).toBe("第一台修改");
+  });
+  it("核對期間雲端再更新，不會直接覆蓋未看過的新版本", async () => {
+    const local = (await storage.db.records.get(saleId))!;
+    await storage.save({
+      ...local,
+      data: { ...(local.data as import("./domain").Entry), note: "本機待核對" },
+    });
+    await transport.rpc({
+      p_op: crypto.randomUUID(),
+      p_id: saleId,
+      p_kind: "entry",
+      p_base: local.version,
+      p_data: { ...local.data, note: "雲端版本一" },
+    });
+    await storage.sync(owner);
+    const op = (await storage.db.outbox.toArray()).find(
+      (o) => o.record.id === saleId,
+    )!;
+    await transport.rpc({
+      p_op: crypto.randomUUID(),
+      p_id: saleId,
+      p_kind: "entry",
+      p_base: local.version + 1,
+      p_data: { ...local.data, note: "雲端版本二" },
+    });
+    await storage.resolve(op, true);
+    const updated = (await storage.db.outbox.get(op.id))!;
+    expect((updated.remote!.data as import("./domain").Entry).note).toBe(
+      "雲端版本二",
+    );
+    expect(updated.error).toContain("再次核對");
+    expect(
+      (await transport.query()).find((r: any) => r.id === saleId).data.note,
+    ).toBe("雲端版本二");
+  });
+  it("批次分類離線保存後逐筆同步，遠端同筆變更會提示衝突", async () => {
+    const product = (name: string) =>
+      domain.makeRow(owner, "product", {
+        name,
+        category: "原分類",
+        unit: "包",
+        price: 500,
+        opening: 7,
+        sellable: true,
+        active: true,
+      });
+    const first = product("批次甲"),
+      second = product("批次乙");
+    await storage.save(first);
+    await storage.save(second);
+    await storage.sync(owner);
+    const before = (await storage.list()).filter((row) =>
+      [first.id, second.id].includes(row.id),
+    );
+    await storage.saveCategories(
+      before.map((row) => ({
+        id: row.id,
+        version: row.version,
+        category: "新分類",
+      })),
+    );
+    expect(
+      (await storage.db.outbox.toArray()).filter((op) =>
+        [first.id, second.id].includes(op.record.id),
+      ),
+    ).toHaveLength(2);
+    const remoteFirst = (await transport.query()).find(
+      (row: any) => row.id === first.id,
+    )!;
+    await transport.rpc({
+      p_op: crypto.randomUUID(),
+      p_id: first.id,
+      p_kind: "product",
+      p_base: remoteFirst.version,
+      p_data: { ...remoteFirst.data, category: "其他裝置的分類" },
+    });
+    await storage.sync(owner);
+    const pending = (await storage.db.outbox.toArray()).filter((op) =>
+      [first.id, second.id].includes(op.record.id),
+    );
+    expect(pending).toHaveLength(1);
+    expect(pending[0].record.id).toBe(first.id);
+    expect(pending[0].status).toBe("conflict");
+    expect(
+      (pending[0].remote!.data as import("./domain").Product).category,
+    ).toBe("其他裝置的分類");
+    expect(
+      (
+        (await storage.db.records.get(first.id))!
+          .data as import("./domain").Product
+      ).category,
+    ).toBe("新分類");
+    expect(
+      (await transport.query()).find((row: any) => row.id === second.id).data
+        .category,
+    ).toBe("新分類");
+    expect(domain.stock(await storage.list(), second.id)).toBe(7);
   });
 });

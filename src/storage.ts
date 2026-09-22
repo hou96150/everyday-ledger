@@ -1,6 +1,11 @@
 import Dexie, { type Table } from "dexie";
 import { createClient } from "@supabase/supabase-js";
-import { type RecordRow, type Operation, validate } from "./domain";
+import {
+  type RecordRow,
+  type Operation,
+  type Product,
+  validate,
+} from "./domain";
 const url = import.meta.env.VITE_SUPABASE_URL,
   key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 export const cloud =
@@ -73,6 +78,65 @@ export async function save(row: RecordRow, target: LedgerDB = db) {
         before,
         after: next,
       });
+    },
+  );
+}
+export async function saveCategories(
+  changes: { id: string; version: number; category: string }[],
+  target: LedgerDB = db,
+) {
+  if (!changes.length) return 0;
+  if (new Set(changes.map((change) => change.id)).size !== changes.length)
+    throw Error("選取的品項重複，請重新選擇");
+  const category = changes[0].category.trim();
+  if (changes.some((change) => change.category.trim() !== category))
+    throw Error("一次只能變更到同一個分類");
+  return target.transaction(
+    "rw",
+    [target.records, target.outbox, target.history, target.meta],
+    async () => {
+      const rows = await list(target);
+      const existing = new Map(rows.map((row) => [row.id, row]));
+      const updates = changes.flatMap((change) => {
+        const before = existing.get(change.id);
+        if (!before || before.kind !== "product")
+          throw Error("品項不存在，請重新整理後再試");
+        if (before.version !== change.version)
+          throw Error("品項已變動，請重新檢查後再試");
+        const current = before.data as Product;
+        if (current.category === category) return [];
+        const updated = { ...before, data: { ...current, category } };
+        validate(updated, rows);
+        return [{ before, updated }];
+      });
+      let sequence = Number((await target.meta.get("sequence"))?.value || 0);
+      const now = new Date().toISOString();
+      for (const { before, updated } of updates) {
+        const next = {
+          ...updated,
+          version: before.version + 1,
+          updated_at: now,
+        };
+        const id = crypto.randomUUID();
+        sequence += 1;
+        await target.records.put(next);
+        await target.outbox.add({
+          id,
+          sequence,
+          record: next,
+          base: before.version,
+          status: "pending",
+        });
+        await target.history.add({
+          id,
+          recordId: before.id,
+          at: now,
+          before,
+          after: next,
+        });
+      }
+      await target.meta.put({ key: "sequence", value: String(sequence) });
+      return updates.length;
     },
   );
 }
@@ -176,8 +240,14 @@ export async function resolve(op: Operation, keepLocal: boolean) {
     .maybeSingle();
   if (response.error) throw response.error;
   const remote = response.data as RecordRow | null;
-  if(op.status==='conflict'&&(remote?.version||0)!==(op.remote?.version||0)){
-    await target.outbox.update(op.id,{remote:remote||undefined,error:'雲端又有新版本，請再次核對後選擇'});
+  if (
+    op.status === "conflict" &&
+    (remote?.version || 0) !== (op.remote?.version || 0)
+  ) {
+    await target.outbox.update(op.id, {
+      remote: remote || undefined,
+      error: "雲端又有新版本，請再次核對後選擇",
+    });
     return;
   }
   const current = await target.records.get(op.record.id);
@@ -193,8 +263,9 @@ export async function resolve(op: Operation, keepLocal: boolean) {
     "rw",
     [target.records, target.outbox, target.history, target.meta],
     async () => {
-      const latest=await target.records.get(op.record.id);
-      if(latest?.version!==current?.version)throw Error('本機紀錄剛剛已更新，請重新核對後再選擇');
+      const latest = await target.records.get(op.record.id);
+      if (latest?.version !== current?.version)
+        throw Error("本機紀錄剛剛已更新，請重新核對後再選擇");
       const related = (await target.outbox.toArray()).filter(
         (x) => x.record.id === op.record.id,
       );

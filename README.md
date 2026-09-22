@@ -28,8 +28,9 @@ An offline-capable ledger for the small shops that keep a family going.
 [開啟公開試用版 →](https://hou96150.github.io/everyday-ledger/)
 
 1. 畫面會載入示範商品。點一包咖啡豆，調整「實收金額」，完成記帳。
-2. 到「庫存管理」看數量變化，再切換「影印店」記一筆收入與備註。
-3. 在「營業報表」選兩店合計，匯出 Excel。
+2. 商品可切換「卡片／條列」；到「庫存管理」按分類篩選或勾選多個品項一起歸類。
+3. 看庫存數量變化，再切換「影印店」記一筆收入與備註。
+4. 在「營業報表」選兩店合計，匯出 Excel。
 
 **不用註冊。試用資料僅存在你的瀏覽器，不連接家庭帳本或任何 Supabase 專案。** 頁面重新整理後會保留你在同一瀏覽器的修改；清除該網站資料便會清除試用紀錄。示範交易使用首次開啟時的日期，隔天可調整報表日期查看。
 
@@ -46,17 +47,19 @@ An offline-capable ledger for the small shops that keep a family going.
 
 ### 做得到什麼？
 
-| 日常情境                       | 帳本怎麼處理                                         |
-| ------------------------------ | ---------------------------------------------------- |
-| 一包豆有半磅、1 磅等規格       | 各規格建立獨立品項、售價與期初庫存                   |
-| 原價 1,000 元，熟客實收 900 元 | 保留商品與數量，另外輸入實收金額                     |
-| 補進 5 包，月底才付貨款        | 進貨增加庫存；實際付款時另外記支出                   |
-| 送人、耗用、報廢或盤點         | 記錄庫存異動與原因，不自動當成收入或支出             |
-| 客人只退其中 1 包              | 關聯原銷售，記部分退款，選擇是否回補庫存             |
-| 昨天金額打錯                   | 修改或作廢，保留前後紀錄供查核                       |
-| 店內短暫斷網                   | 已開啟、登入過的裝置先存本機，連線後在網站開啟時同步 |
-| 兩台裝置同時改同一筆           | 提示版本衝突，由使用者核對後決定                     |
-| 打烊要整理兩店                 | 日期範圍、單店／合計、銷售數量與 `.xlsx` 匯出        |
+| 日常情境                       | 帳本怎麼處理                                             |
+| ------------------------------ | -------------------------------------------------------- |
+| 一包豆有半磅、1 磅等規格       | 各規格建立獨立品項、售價與期初庫存                       |
+| 商品很多，卡片要一直往下滑     | 改用條列，一次看名稱、分類、售價與目前庫存；裝置記住選擇 |
+| 要整理數十個商品的分類         | 篩選目前結果、全選或逐項勾選，再批次移到分類             |
+| 原價 1,000 元，熟客實收 900 元 | 保留商品與數量，另外輸入實收金額                         |
+| 補進 5 包，月底才付貨款        | 進貨增加庫存；實際付款時另外記支出                       |
+| 送人、耗用、報廢或盤點         | 記錄庫存異動與原因，不自動當成收入或支出                 |
+| 客人只退其中 1 包              | 關聯原銷售，記部分退款，選擇是否回補庫存                 |
+| 昨天金額打錯                   | 修改或作廢，保留前後紀錄供查核                           |
+| 店內短暫斷網                   | 已開啟、登入過的裝置先存本機，連線後在網站開啟時同步     |
+| 兩台裝置同時改同一筆           | 提示版本衝突，由使用者核對後決定                         |
+| 打烊要整理兩店                 | 日期範圍、單店／合計、銷售數量與 `.xlsx` 匯出            |
 
 <details>
 <summary>看手機畫面與影印店流程</summary>
@@ -108,7 +111,7 @@ npm run build
 npm run preview
 ```
 
-目前有 **29 個自動測試**，涵蓋收支、庫存、退款、版本衝突、重送防重複、RLS／直接寫表拒絕、本機持久化與公開試用隔離。SQL 測試在 PGlite 的 PostgreSQL 引擎執行；它不等同於完整 Supabase 平台測試。
+目前有 **32 個自動測試**，涵蓋收支、庫存、批次分類、退款、版本衝突、重送防重複、RLS／直接寫表拒絕、本機持久化與公開試用隔離。SQL 測試在 PGlite 的 PostgreSQL 引擎執行；它不等同於完整 Supabase 平台測試。
 
 原始部署也曾完成真實 Supabase API、瀏覽器離線重開、Excel 匯出後重新讀取與手機版面驗證。這些是開發驗證，**不代表已完成長期店內營運驗收或外部安全稽核**。見 [驗證與限制](docs/VERIFICATION.md)、[架構](docs/ARCHITECTURE.md)。
 
@@ -124,7 +127,7 @@ npm run preview
 
 ### 接下來與參與方式
 
-近期優先：完整備份／還原、帳號維護、兩台真實裝置的店內驗收、鍵盤與輔助使用體驗。見 [Roadmap](docs/ROADMAP.md)。
+近期優先：定期可還原備份、容量與同步異常提醒、帳號維護、兩台真實裝置的店內驗收。這些仍是待做事項，見 [Roadmap](docs/ROADMAP.md)。
 
 歡迎用 [Issue](https://github.com/hou96150/everyday-ledger/issues/new/choose) 分享你的店務情境、重現錯誤或提出改善；請用假資料，不要貼客戶或帳務秘密。貢獻方式見 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
@@ -147,8 +150,9 @@ Everyday Ledger turns that situation into a small, working product: **record cof
 [Open the public demo →](https://hou96150.github.io/everyday-ledger/)
 
 1. Choose a sample coffee product, edit the amount actually received, and save a sale.
-2. Check the inventory change. Switch to the print shop and record income with a note.
-3. Open reports, select both shops, and export an Excel workbook.
+2. Switch products between cards and compact rows; filter inventory and bulk-recategorize selected items.
+3. Check the stock change. Switch to the print shop and record income with a note.
+4. Open reports, select both shops, and export an Excel workbook.
 
 **No signup. Demo records stay in your browser; there is no connection to a household backend or any Supabase project.** Reloads preserve your edits on that browser. Clearing site data removes them. Sample transactions use the date of the first visit; adjust the report range when returning on a later day.
 
@@ -165,17 +169,19 @@ The current product has two fixed shop workflows with editable names, not an arb
 
 ### Daily workflows
 
-| Situation                                    | Behavior                                                                                    |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Different sizes of the same coffee           | Separate items, prices and opening stock                                                    |
-| List price is 1,000; the customer pays 900   | Preserve quantities and enter the actual receipt                                            |
-| Five bags arrive before the supplier is paid | Purchase adds stock; a separate expense records payment                                     |
-| Gifts, usage, spoilage and stock counts      | Record a reason and inventory movement without inventing cash flow                          |
-| One item from a larger sale is returned      | Link a partial refund to the sale; choose whether to restock                                |
-| A previously entered amount is wrong         | Edit or void it while preserving before/after history                                       |
-| Connectivity drops                           | Previously loaded, signed-in devices save locally and sync while the app is open and online |
-| Two devices change the same record           | Show the version conflict for explicit review                                               |
-| End-of-day review                            | Date filters, per-shop or combined reports, quantities sold and `.xlsx` export              |
+| Situation                                    | Behavior                                                                                           |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Different sizes of the same coffee           | Separate items, prices and opening stock                                                           |
+| Many products crowd the sales screen         | Switch to compact rows showing name, category, price and current stock; remember the device choice |
+| Dozens of products need recategorization     | Filter visible inventory, select all or individual items, then move them in one batch              |
+| List price is 1,000; the customer pays 900   | Preserve quantities and enter the actual receipt                                                   |
+| Five bags arrive before the supplier is paid | Purchase adds stock; a separate expense records payment                                            |
+| Gifts, usage, spoilage and stock counts      | Record a reason and inventory movement without inventing cash flow                                 |
+| One item from a larger sale is returned      | Link a partial refund to the sale; choose whether to restock                                       |
+| A previously entered amount is wrong         | Edit or void it while preserving before/after history                                              |
+| Connectivity drops                           | Previously loaded, signed-in devices save locally and sync while the app is open and online        |
+| Two devices change the same record           | Show the version conflict for explicit review                                                      |
+| End-of-day review                            | Date filters, per-shop or combined reports, quantities sold and `.xlsx` export                     |
 
 ### Design choices
 
@@ -208,7 +214,7 @@ npm run build
 npm run preview
 ```
 
-**29 automated tests** cover bookkeeping, inventory, refunds, version conflicts, idempotent retries, RLS/direct-write rejection, local persistence and public-demo isolation. SQL runs in PGlite's PostgreSQL engine; this is not a substitute for testing the full Supabase platform.
+**32 automated tests** cover bookkeeping, inventory, bulk recategorization, refunds, version conflicts, idempotent retries, RLS/direct-write rejection, local persistence and public-demo isolation. SQL runs in PGlite's PostgreSQL engine; this is not a substitute for testing the full Supabase platform.
 
 The original development deployment also passed real Supabase API checks, browser offline reloads, workbook export/reopening and mobile layout checks. These are development results, **not long-term shop acceptance or an independent security audit**. See [Verification](docs/VERIFICATION.md) and [Architecture](docs/ARCHITECTURE.md).
 
@@ -224,7 +230,7 @@ The original development deployment also passed real Supabase API checks, browse
 
 ### Next steps and contributing
 
-Priorities are restorable backups, account maintenance, real two-device shop acceptance, and keyboard/accessibility improvements. See the [roadmap](docs/ROADMAP.md).
+Priorities are scheduled, verified backups; capacity and sync-failure alerts; account maintenance; and real two-device shop acceptance. These are planned work, not shipped features. See the [roadmap](docs/ROADMAP.md).
 
 Share a shop scenario, reproducible bug, or focused improvement through [Issues](https://github.com/hou96150/everyday-ledger/issues/new/choose). Use fictional data and never post customer information or credentials. See [Contributing](CONTRIBUTING.md).
 

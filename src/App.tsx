@@ -1,4 +1,10 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 import {
   Coffee,
   Printer,
@@ -20,8 +26,19 @@ import {
   LogOut,
   History,
   ReceiptText,
+  LayoutGrid,
+  List,
 } from "lucide-react";
-import { cloud, db, openAccount, list, save, sync, resolve } from "./storage";
+import {
+  cloud,
+  db,
+  openAccount,
+  list,
+  save,
+  saveCategories,
+  sync,
+  resolve,
+} from "./storage";
 import {
   defaults,
   entries,
@@ -165,9 +182,10 @@ export default function App() {
   useEffect(() => {
     if (!user) return;
     openAccount(user);
-    const ready = import.meta.env.VITE_PUBLIC_DEMO === "true"
-      ? import("./demo").then(({ seedPublicDemo }) => seedPublicDemo())
-      : Promise.resolve();
+    const ready =
+      import.meta.env.VITE_PUBLIC_DEMO === "true"
+        ? import("./demo").then(({ seedPublicDemo }) => seedPublicDemo())
+        : Promise.resolve();
     ready.then(reload).then(() => {
       if (user !== "demo") synchronize();
     });
@@ -481,6 +499,17 @@ export default function App() {
             <Inventory
               rows={rows}
               onEdit={setProductEditor}
+              onBatchCategory={async (changes) => {
+                const changed = await saveCategories(changes);
+                await reload();
+                notify(
+                  user === "demo"
+                    ? `已在試用帳本變更 ${changed} 個品項`
+                    : `已存本機：${changed} 個品項；等待同步`,
+                );
+                if (online && user !== "demo") void synchronize();
+                return changed;
+              }}
               onMove={(type, id) => {
                 const p = rows.find((r) => r.id === id)!.data as Product;
                 const e = newEntry(type);
@@ -716,6 +745,9 @@ function Register({
   const [cart, setCart] = useState<Line[]>([]),
     [query, setQuery] = useState(""),
     [category, setCategory] = useState("全部"),
+    [catalogView, setCatalogView] = useState<"cards" | "list">(() =>
+      localStorage.getItem("ledger-catalog-view") === "list" ? "list" : "cards",
+    ),
     [amount, setAmount] = useState<string | null>(null),
     [date, setDate] = useState(today()),
     [note, setNote] = useState(""),
@@ -726,8 +758,24 @@ function Register({
   );
   const cats = [
     "全部",
-    ...new Set(ps.map((r) => (r.data as Product).category)),
+    "未分類",
+    ...new Set(
+      ps
+        .map((r) => (r.data as Product).category.trim())
+        .filter((name) => name && name !== "未分類" && name !== "全部"),
+    ),
   ];
+  const filtered = ps.filter((r) => {
+    const p = r.data as Product;
+    return (
+      p.name.includes(query) &&
+      (category === "全部" || category === (p.category.trim() || "未分類"))
+    );
+  });
+  function setView(view: "cards" | "list") {
+    setCatalogView(view);
+    localStorage.setItem("ledger-catalog-view", view);
+  }
   const original = cart.reduce((s, l) => s + l.quantity * l.price, 0);
   function change(r: RecordRow, n: number) {
     const p = r.data as Product;
@@ -783,39 +831,85 @@ function Register({
             </button>
           ))}
         </div>
-        <div className="product-grid">
-          {ps
-            .filter((r) => {
-              const p = r.data as Product;
-              return (
-                p.name.includes(query) &&
-                (category === "全部" || category === p.category)
-              );
-            })
-            .map((r) => {
-              const p = r.data as Product,
-                n = stock(rows, r.id);
-              return (
-                <button
-                  className="product-tile"
-                  key={r.id}
-                  onClick={() => change(r, 1)}
-                >
-                  <div className="product-top">
-                    <span>{p.category || "商品"}</span>
-                    <Plus size={18} />
-                  </div>
-                  <strong>{p.name}</strong>
-                  <div className="product-bottom">
-                    <b>{money(p.price)}</b>
-                    <small className={n < 0 ? "negative" : ""}>
-                      庫存 {n} {p.unit}
-                    </small>
-                  </div>
-                </button>
-              );
-            })}
+        <div className="catalogue-tools">
+          <span>顯示 {filtered.length} 個品項</span>
+          <div className="view-switch" role="group" aria-label="商品顯示方式">
+            <button
+              type="button"
+              className={catalogView === "cards" ? "selected" : ""}
+              aria-pressed={catalogView === "cards"}
+              onClick={() => setView("cards")}
+            >
+              <LayoutGrid size={16} /> 卡片
+            </button>
+            <button
+              type="button"
+              className={catalogView === "list" ? "selected" : ""}
+              aria-pressed={catalogView === "list"}
+              onClick={() => setView("list")}
+            >
+              <List size={16} /> 條列
+            </button>
+          </div>
         </div>
+        <div
+          className={catalogView === "cards" ? "product-grid" : "product-list"}
+        >
+          {filtered.map((r) => {
+            const p = r.data as Product,
+              n = stock(rows, r.id);
+            return (
+              <button
+                type="button"
+                className={
+                  catalogView === "cards" ? "product-tile" : "product-row"
+                }
+                key={r.id}
+                aria-label={`加入 ${p.name}，售價 ${money(p.price)}，庫存 ${n}`}
+                onClick={() => change(r, 1)}
+              >
+                {catalogView === "cards" ? (
+                  <>
+                    <div className="product-top">
+                      <span>{p.category.trim() || "未分類"}</span>
+                      <Plus size={18} />
+                    </div>
+                    <strong>{p.name}</strong>
+                    <div className="product-bottom">
+                      <b>{money(p.price)}</b>
+                      <small className={n < 0 ? "negative" : ""}>
+                        庫存 {n}
+                      </small>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <strong className="product-row-name">{p.name}</strong>
+                    <span className="product-row-category">
+                      {p.category.trim() || "未分類"}
+                    </span>
+                    <b className="product-row-price">{money(p.price)}</b>
+                    <span
+                      className={
+                        n < 0
+                          ? "product-row-stock negative"
+                          : "product-row-stock"
+                      }
+                    >
+                      庫存 {n}
+                    </span>
+                    <span className="product-row-add" aria-hidden="true">
+                      <Plus size={17} />
+                    </span>
+                  </>
+                )}
+              </button>
+            );
+          })}
+        </div>
+        {ps.length > 0 && filtered.length === 0 && (
+          <p className="hint">沒有符合搜尋或分類的商品。</p>
+        )}
         {ps.length === 0 && (
           <div className="empty">
             <Package size={36} />
@@ -1592,17 +1686,103 @@ function Inventory({
   rows,
   onEdit,
   onMove,
+  onBatchCategory,
 }: {
   rows: RecordRow[];
   onEdit: (r: RecordRow) => void;
   onMove: (t: EntryType, id: string) => void;
+  onBatchCategory: (
+    changes: { id: string; version: number; category: string }[],
+  ) => Promise<number>;
 }) {
   const [q, setQ] = useState(""),
-    [showInactive, setShowInactive] = useState(false);
-  const ps = products(rows).filter((r) => {
+    [showInactive, setShowInactive] = useState(false),
+    [category, setCategory] = useState("全部"),
+    [selected, setSelected] = useState<Set<string>>(new Set()),
+    [batchOpen, setBatchOpen] = useState(false),
+    [batchVersions, setBatchVersions] = useState<Map<string, number>>(
+      new Map(),
+    ),
+    [target, setTarget] = useState(""),
+    [newCategory, setNewCategory] = useState(""),
+    [batchError, setBatchError] = useState(""),
+    [savingBatch, setSavingBatch] = useState(false);
+  const allBox = useRef<HTMLInputElement>(null);
+  const allProducts = products(rows);
+  const categories = [
+    "全部",
+    "未分類",
+    ...new Set(
+      allProducts
+        .map((r) => (r.data as Product).category.trim())
+        .filter((name) => name && name !== "未分類" && name !== "全部"),
+    ),
+  ];
+  const ps = allProducts.filter((r) => {
     const p = r.data as Product;
-    return p.name.includes(q) && (p.active || showInactive);
+    return (
+      p.name.includes(q) &&
+      (p.active || showInactive) &&
+      (category === "全部" || category === (p.category.trim() || "未分類"))
+    );
   });
+  const selectedRows = ps.filter((row) => selected.has(row.id));
+  const allSelected = ps.length > 0 && selectedRows.length === ps.length;
+  useEffect(() => {
+    if (allBox.current)
+      allBox.current.indeterminate = selectedRows.length > 0 && !allSelected;
+  }, [selectedRows.length, allSelected]);
+  function changeFilter(update: () => void) {
+    update();
+    setSelected(new Set());
+  }
+  function toggle(id: string) {
+    setSelected((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+  function changeAll() {
+    setSelected(allSelected ? new Set() : new Set(ps.map((row) => row.id)));
+  }
+  async function applyCategory() {
+    const finalCategory =
+      target === "__none"
+        ? ""
+        : target === "__new"
+          ? newCategory.trim()
+          : target;
+    if (!target || (target === "__new" && !finalCategory)) {
+      setBatchError("請選擇或輸入分類");
+      return;
+    }
+    if (target === "__new" && ["全部", "未分類"].includes(finalCategory)) {
+      setBatchError("「全部」與「未分類」是篩選選項，請使用其他名稱");
+      return;
+    }
+    const existing = categories.find((name) => name === finalCategory);
+    const destination = existing || finalCategory;
+    const changes = selectedRows.map((row) => ({
+      id: row.id,
+      version: batchVersions.get(row.id) ?? row.version,
+      category: destination,
+    }));
+    setSavingBatch(true);
+    setBatchError("");
+    try {
+      await onBatchCategory(changes);
+      setSelected(new Set());
+      setBatchOpen(false);
+      setTarget("");
+      setNewCategory("");
+    } catch (error) {
+      setBatchError((error as Error).message);
+    } finally {
+      setSavingBatch(false);
+    }
+  }
   return (
     <section className="panel">
       <div className="toolbar">
@@ -1612,22 +1792,85 @@ function Inventory({
             aria-label="搜尋庫存"
             placeholder="搜尋品項…"
             value={q}
-            onChange={(e) => setQ(e.target.value)}
+            onChange={(e) => changeFilter(() => setQ(e.target.value))}
           />
         </div>
         <label className="check">
           <input
             type="checkbox"
             checked={showInactive}
-            onChange={(e) => setShowInactive(e.target.checked)}
+            onChange={(e) =>
+              changeFilter(() => setShowInactive(e.target.checked))
+            }
           />
           包含停用品項
         </label>
       </div>
-      <div className="table-wrap">
+      <div className="chips inventory-chips" aria-label="庫存分類">
+        {categories.map((name) => (
+          <button
+            type="button"
+            key={name}
+            className={category === name ? "selected" : ""}
+            onClick={() => changeFilter(() => setCategory(name))}
+          >
+            {name}
+          </button>
+        ))}
+      </div>
+      <div className="inventory-selection">
+        <span>
+          顯示 {ps.length} 項
+          {selectedRows.length > 0 ? `・已選 ${selectedRows.length} 項` : ""}
+        </span>
+        {ps.length > 0 && (
+          <button
+            type="button"
+            className="secondary inventory-mobile-select"
+            onClick={changeAll}
+          >
+            {allSelected ? "取消全選" : "全選目前結果"}
+          </button>
+        )}
+        {selectedRows.length > 0 && (
+          <div>
+            <button
+              type="button"
+              className="secondary"
+              onClick={() => setSelected(new Set())}
+            >
+              取消選取
+            </button>
+            <button
+              type="button"
+              className="primary"
+              onClick={() => {
+                setBatchError("");
+                setBatchVersions(
+                  new Map(selectedRows.map((row) => [row.id, row.version])),
+                );
+                setBatchOpen(true);
+              }}
+            >
+              變更分類
+            </button>
+          </div>
+        )}
+      </div>
+      <div className="table-wrap inventory-table">
         <table>
           <thead>
             <tr>
+              <th>
+                <input
+                  ref={allBox}
+                  type="checkbox"
+                  aria-label="全選目前結果"
+                  checked={allSelected}
+                  disabled={ps.length === 0}
+                  onChange={changeAll}
+                />
+              </th>
               <th>品項／規格</th>
               <th>分類</th>
               <th>目前庫存</th>
@@ -1643,15 +1886,23 @@ function Inventory({
               return (
                 <tr key={r.id}>
                   <td>
+                    <input
+                      type="checkbox"
+                      aria-label={`選取 ${p.name}`}
+                      checked={selected.has(r.id)}
+                      onChange={() => toggle(r.id)}
+                    />
+                  </td>
+                  <td>
                     <strong>{p.name}</strong>
                     <small>
                       {p.sellable ? "販售商品" : "原料／耗材"}
                       {!p.active ? " · 已停用" : ""}
                     </small>
                   </td>
-                  <td>{p.category}</td>
+                  <td>{p.category.trim() || "未分類"}</td>
                   <td className={n < 0 ? "negative" : ""}>
-                    <b>{n}</b> {p.unit}
+                    <b>{n}</b>
                     {n < 0 && <small>待核對</small>}
                   </td>
                   <td>{p.sellable ? money(p.price) : "—"}</td>
@@ -1689,6 +1940,79 @@ function Inventory({
           <h3>尚無符合的品項</h3>
           <p>新增商品或耗材，設定現場已有的數量。</p>
         </div>
+      )}
+      {batchOpen && (
+        <Modal
+          title="批次變更分類"
+          onClose={() => !savingBatch && setBatchOpen(false)}
+        >
+          <p>
+            已選 {selectedRows.length}{" "}
+            個品項。分類變更不影響售價、庫存或既有帳目。
+          </p>
+          <div className="batch-items">
+            {selectedRows.map((row) => (
+              <div key={row.id}>
+                <strong>{(row.data as Product).name}</strong>
+                <span>{(row.data as Product).category.trim() || "未分類"}</span>
+              </div>
+            ))}
+          </div>
+          <Field label="移到分類">
+            <select
+              value={target}
+              disabled={savingBatch}
+              onChange={(e) => {
+                setTarget(e.target.value);
+                setBatchError("");
+              }}
+            >
+              <option value="">請選擇分類…</option>
+              <option value="__none">未分類</option>
+              {categories
+                .filter((name) => name !== "全部" && name !== "未分類")
+                .map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              <option value="__new">新增分類…</option>
+            </select>
+          </Field>
+          {target === "__new" && (
+            <Field label="新分類名稱">
+              <input
+                value={newCategory}
+                maxLength={80}
+                disabled={savingBatch}
+                onChange={(e) => setNewCategory(e.target.value)}
+              />
+            </Field>
+          )}
+          {batchError && (
+            <p className="error" role="alert">
+              {batchError}
+            </p>
+          )}
+          <div className="modal-actions">
+            <button
+              type="button"
+              className="secondary"
+              disabled={savingBatch}
+              onClick={() => setBatchOpen(false)}
+            >
+              取消
+            </button>
+            <button
+              type="button"
+              className="primary"
+              disabled={savingBatch || !selectedRows.length}
+              onClick={() => void applyCategory()}
+            >
+              {savingBatch ? "儲存中…" : "確認變更分類"}
+            </button>
+          </div>
+        </Modal>
       )}
     </section>
   );
@@ -2104,9 +2428,13 @@ function SettingsPage({
               <details>
                 <summary>查看本機與雲端內容</summary>
                 <h4>本機</h4>
-                <RecordSummary value={(rows.find(r=>r.id===o.record.id)||o.record).data}/>
+                <RecordSummary
+                  value={
+                    (rows.find((r) => r.id === o.record.id) || o.record).data
+                  }
+                />
                 <h4>雲端</h4>
-                <RecordSummary value={o.remote?.data}/>
+                <RecordSummary value={o.remote?.data} />
               </details>
               <div className="row-actions">
                 {o.status === "conflict" ? (
@@ -2180,9 +2508,9 @@ function HistoryModal({
               {h.before ? "修改" : "建立"}
             </summary>
             <h4>修改前</h4>
-            <RecordSummary value={h.before}/>
+            <RecordSummary value={h.before} />
             <h4>修改後</h4>
-            <RecordSummary value={h.after}/>
+            <RecordSummary value={h.after} />
           </details>
         ))
       ) : (
@@ -2191,12 +2519,54 @@ function HistoryModal({
     </Modal>
   );
 }
-function RecordSummary({value}:{value:unknown}){
- if(!value||typeof value!=='object')return <p className="muted">尚無紀錄</p>;
- const item=('data' in value?value.data:value) as Product|Entry|Settings;
- let fields:[string,ReactNode][]=[];
- if('store' in item){fields=[['類型',entryNames[item.type]],['日期',item.date],['金額',money(item.amount)],['品項',item.lines.map(l=>`${l.name} × ${l.quantity}${item.type==='refund'?(l.restock?'（回補庫存）':'（不回補）'):''}`).join('、')||'—'],['分類',item.category||'—'],['備註',item.note||'—'],['狀態',item.voided?'已作廢':'有效']];}
- else if('name' in item){fields=[['名稱',item.name],['分類',item.category],['售價',money(item.price)],['期初庫存',`${item.opening} ${item.unit}`],['品項類型',item.sellable?'販售商品':'原料／耗材'],['狀態',item.deleted?'已刪除':item.active?'使用中':'已停用']];}
- else{fields=[['咖啡店',item.coffee],['影印店',item.print],['支出分類',item.categories.join('、')]];}
- return <dl className="record-summary">{fields.map(([label,content])=><div key={label}><dt>{label}</dt><dd>{content}</dd></div>)}</dl>;
+function RecordSummary({ value }: { value: unknown }) {
+  if (!value || typeof value !== "object")
+    return <p className="muted">尚無紀錄</p>;
+  const item = ("data" in value ? value.data : value) as
+    Product | Entry | Settings;
+  let fields: [string, ReactNode][] = [];
+  if ("store" in item) {
+    fields = [
+      ["類型", entryNames[item.type]],
+      ["日期", item.date],
+      ["金額", money(item.amount)],
+      [
+        "品項",
+        item.lines
+          .map(
+            (l) =>
+              `${l.name} × ${l.quantity}${item.type === "refund" ? (l.restock ? "（回補庫存）" : "（不回補）") : ""}`,
+          )
+          .join("、") || "—",
+      ],
+      ["分類", item.category || "—"],
+      ["備註", item.note || "—"],
+      ["狀態", item.voided ? "已作廢" : "有效"],
+    ];
+  } else if ("name" in item) {
+    fields = [
+      ["名稱", item.name],
+      ["分類", item.category],
+      ["售價", money(item.price)],
+      ["期初庫存", `${item.opening} ${item.unit}`],
+      ["品項類型", item.sellable ? "販售商品" : "原料／耗材"],
+      ["狀態", item.deleted ? "已刪除" : item.active ? "使用中" : "已停用"],
+    ];
+  } else {
+    fields = [
+      ["咖啡店", item.coffee],
+      ["影印店", item.print],
+      ["支出分類", item.categories.join("、")],
+    ];
+  }
+  return (
+    <dl className="record-summary">
+      {fields.map(([label, content]) => (
+        <div key={label}>
+          <dt>{label}</dt>
+          <dd>{content}</dd>
+        </div>
+      ))}
+    </dl>
+  );
 }
