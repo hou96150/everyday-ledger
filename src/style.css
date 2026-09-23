@@ -1583,3 +1583,65 @@ pre {
   margin: 0;
   overflow-wrap: anywhere;
 }
+.backup-panel {
+  grid-column: 1 / -1;
+}
+.backup-panel > p {
+  max-width: 78ch;
+}
+.backup-panel > .field {
+  margin-top: 24px;
+  max-width: 650px;
+}
+.backup-panel input[type="file"] {
+  max-width: 100%;
+  font-size: 14px;
+}
+.backup-preview {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px;
+  background: #f8f5ee;
+  max-width: 760px;
+}
+.backup-preview dl {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.backup-preview dt {
+  font-size: 13px;
+  color: var(--muted);
+}
+.backup-preview dd {
+  margin: 5px 0 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+.backup-panel details {
+  border-top: 1px solid var(--line);
+  margin-top: 24px;
+  padding-top: 16px;
+}
+.backup-panel summary {
+  min-height: 44px;
+}
+.backup-panel .row-actions button {
+  min-height: 44px;
+  padding: 10px 14px;
+}
+.backup-panel .row-actions .primary {
+  color: white;
+}
+@media (max-width: 600px) {
+  .backup-preview dl {
+    grid-template-columns: 1fr 1fr;
+  }
+  .backup-preview {
+    padding: 14px;
+  }
+  .backup-panel input[type="file"] {
+    min-width: 0;
+    width: 100%;
+  }
+}

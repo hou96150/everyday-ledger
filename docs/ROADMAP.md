@@ -1,5 +1,9 @@
 # 下一步 / Roadmap
 
+已完成手動 JSON 完整備份與空白帳本還原，見 [備份指南](BACKUP.md)。排程備份仍待做。
+
+Manual JSON backup and empty-ledger restore are available; scheduled backups remain planned.
+
 這是方向，不是交付日期承諾。/ These are priorities, not delivery-date commitments.
 
 | 優先 / Priority         | 工作 / Work                                                               | 完成條件 / Acceptance                                                                                                                                                                   |

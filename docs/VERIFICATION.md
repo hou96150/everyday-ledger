@@ -2,7 +2,7 @@
 
 ## 繁體中文
 
-更新：2026-09-21。此文件區分可重跑測試、開發時人工驗證與尚未完成的驗收。
+更新：2026-09-23。此文件區分可重跑測試、開發時人工驗證與尚未完成的驗收。
 
 ### 可重跑
 
@@ -16,7 +16,7 @@
 | `sync.test.ts`    | 佇列到 PostgreSQL 的整合、批次分類同步、回應遺失重送、過期登入與衝突處理 |
 | `demo.test.ts`    | 公開模式禁用雲端 client；示範資料只植入一次且不覆蓋修改、不入上傳佇列    |
 
-目前合計 32 個測試。既有測試可能依同檔內順序建構情境；PGlite 提供資料庫引擎，並不包含完整 Supabase Auth 或 Edge runtime。
+目前合計 52 個測試。既有測試可能依同檔內順序建構情境；PGlite 提供資料庫引擎，並不包含完整 Supabase Auth 或 Edge runtime。
 
 ### 開發時已驗證
 
@@ -30,13 +30,13 @@
 
 ### 尚未證明
 
-沒有長期真實營業數據、負載測試、外部滲透測試或正式無障礙認證。不保證瀏覽器永不清除資料、不保證關閉後背景同步、不提供備份還原承諾。免費主機可用性與限制不屬於本專案的服務保證。依賴通報見 [SECURITY.md](../SECURITY.md)。
+沒有長期真實營業數據、負載測試、外部滲透測試或正式無障礙認證。不保證瀏覽器永不清除資料、不保證關閉後背景同步、不保證未下載備份的資料可以復原。免費主機可用性與限制不屬於本專案的服務保證。依賴通報見 [SECURITY.md](../SECURITY.md)。
 
 ## English
 
-Updated on 2026-09-21. Reproducible tests, development checks and outstanding acceptance are intentionally separated.
+Updated on 2026-09-23. Reproducible tests, development checks and outstanding acceptance are intentionally separated.
 
-Run `npm ci`, `npm test`, and `npm run build`. CI repeats them for pushes and pull requests. The five test files cover domain arithmetic/validation, atomic bulk recategorization, device persistence/history, SQL authorization and idempotency, outbox-to-PostgreSQL integration, repeated conflicts, expired sessions, and cloud-disabled demo seeding. There are currently 32 tests. Some database scenarios share ordered state; PGlite does not provide the complete Supabase Auth/Edge platform.
+Run `npm ci`, `npm test`, and `npm run build`. CI repeats them for pushes and pull requests. The eight test files cover domain arithmetic/validation, atomic bulk recategorization, device persistence/history, SQL authorization and idempotency, outbox-to-PostgreSQL integration, repeated conflicts, expired sessions, and cloud-disabled demo seeding. There are currently 52 tests. Some database scenarios share ordered state; PGlite does not provide the complete Supabase Auth/Edge platform.
 
 Development verification included actual Supabase bootstrap/login, unauthorized rejection, idempotency, conflicts, purchases/payments, partial and excessive refunds, a second client, history and denied direct writes. Disposable QA records/accounts were cleaned up before household activation; this is not a claim about the current household database.
 
@@ -46,4 +46,10 @@ The household site's 2026-09-21 build was exercised with 81 fictional products: 
 
 In a 2026-09-22 local preview of the public demo with four fictional products, switching to rows, adding a product by clicking its row, and switching back preserved the sale. Inventory category filtering selected three visible items, which appeared in the bulk-category confirmation. No household record was written.
 
-Two actual shop devices still need acceptance across disconnect/reconnect conditions. There are no long-term operating metrics, load-test results, independent penetration tests or accessibility certification. Browser storage eviction, closed-app background sync and backup restoration are not guaranteed. Hosting-provider availability and free-tier limits are not a project SLA. See [Security](../SECURITY.md) for dependencies.
+Two actual shop devices still need acceptance across disconnect/reconnect conditions. There are no long-term operating metrics, load-test results, independent penetration tests or accessibility certification. Browser storage eviction, closed-app background sync and recovery without a saved backup are not guaranteed. Hosting-provider availability and free-tier limits are not a project SLA. See [Security](../SECURITY.md) for dependencies.
+
+## 2026-09-23 備份驗證 / Backup verification
+
+新增 20 項測試，涵蓋 JSON 完整性、兩店資料往返、試用設定固定 ID、非空白拒絕、雲端登入與待同步保護、權限、無效退款及歷史全數回滾，以及超過 1,000 筆歷史完整匯出。本機瀏覽器以虛構資料下載並重新上傳，8 筆紀錄及 1 筆歷史往返一致，重開仍保留；390px 手機無橫向溢出。未對真實家庭帳目執行清空或還原。
+
+Twenty added tests cover JSON integrity, round-trip data for both shops, the fixed demo settings ID, nonempty-ledger rejection, cloud authentication and outbox guards, authorization, atomic rollback for invalid refunds/history, and exports exceeding 1,000 history rows. A local browser downloaded and reuploaded fictional data with matching 8 records and 1 history row, preserved after reload; the 390px layout had no horizontal overflow. No real household ledger was cleared or restored.

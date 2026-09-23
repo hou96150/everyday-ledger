@@ -1,3 +1,4 @@
+import { BackupPanel } from "./BackupPanel";
 import {
   useEffect,
   useRef,
@@ -568,6 +569,8 @@ export default function App() {
           )}
           {page === "settings" && (
             <SettingsPage
+              owner={user}
+              onRestored={reload}
               rows={rows}
               settings={settings}
               onSave={async (value) => {
@@ -2335,6 +2338,8 @@ function Reports({
   );
 }
 function SettingsPage({
+  owner,
+  onRestored,
   rows,
   settings,
   onSave,
@@ -2343,6 +2348,8 @@ function SettingsPage({
   resolveOp,
   onRetry,
 }: {
+  owner: string;
+  onRestored: () => void;
   rows: RecordRow[];
   settings: Settings;
   onSave: (s: Settings) => Promise<void>;
@@ -2355,8 +2362,13 @@ function SettingsPage({
     [cats, setCats] = useState(settings.categories.join("\n")),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
+  useEffect(() => {
+    setS(settings);
+    setCats(settings.categories.join("\n"));
+  }, [settings]);
   return (
     <div className="settings-grid">
+      <BackupPanel owner={owner} onRestored={onRestored} />
       <section className="panel">
         <h2>店面與分類</h2>
         <form

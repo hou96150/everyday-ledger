@@ -45,6 +45,10 @@ An offline-capable ledger for the small shops that keep a family going.
 
 目前固定為兩種店面流程，可修改店名；還不能自由新增第三間店。介面為繁體中文，幣別為新臺幣，營業日期以台灣時區計算。
 
+### 完整備份與還原
+
+在「設定」下載 `.ledger.json`，保存商品、帳目、設定與修改歷史。雲端備份需先完成同步；還原只允許空白帳本，避免覆蓋現有資料。檔案上限 20 MB，未加密，請私下妥善保存。Excel 仍用於查帳，不支援上傳還原。操作、限制與自架更新見 [備份指南](docs/BACKUP.md)。
+
 ### 做得到什麼？
 
 | 日常情境                       | 帳本怎麼處理                                             |
@@ -111,7 +115,7 @@ npm run build
 npm run preview
 ```
 
-目前有 **32 個自動測試**，涵蓋收支、庫存、批次分類、退款、版本衝突、重送防重複、RLS／直接寫表拒絕、本機持久化與公開試用隔離。SQL 測試在 PGlite 的 PostgreSQL 引擎執行；它不等同於完整 Supabase 平台測試。
+目前有 **52 個自動測試**，涵蓋收支、庫存、批次分類、退款、版本衝突、重送防重複、RLS／直接寫表拒絕、本機持久化與公開試用隔離。SQL 測試在 PGlite 的 PostgreSQL 引擎執行；它不等同於完整 Supabase 平台測試。
 
 原始部署也曾完成真實 Supabase API、瀏覽器離線重開、Excel 匯出後重新讀取與手機版面驗證。這些是開發驗證，**不代表已完成長期店內營運驗收或外部安全稽核**。見 [驗證與限制](docs/VERIFICATION.md)、[架構](docs/ARCHITECTURE.md)。
 
@@ -167,6 +171,10 @@ Everyday Ledger turns that situation into a small, working product: **record cof
 
 The current product has two fixed shop workflows with editable names, not an arbitrary number of stores. Its interface is Traditional Chinese; amounts are TWD and business dates use Asia/Taipei.
 
+### Full ledger backup and restore
+
+Download `.ledger.json` in Settings to preserve products, entries, settings and edit history. Cloud backups require completed synchronization; restore only accepts an empty ledger to prevent overwrites. Files are limited to 20 MB and are not encrypted: store them privately. Excel remains a review export and cannot be imported for restoration. See [Backup guide](docs/BACKUP.md) for operation, limits and self-hosted upgrades.
+
 ### Daily workflows
 
 | Situation                                    | Behavior                                                                                           |
@@ -214,7 +222,7 @@ npm run build
 npm run preview
 ```
 
-**32 automated tests** cover bookkeeping, inventory, bulk recategorization, refunds, version conflicts, idempotent retries, RLS/direct-write rejection, local persistence and public-demo isolation. SQL runs in PGlite's PostgreSQL engine; this is not a substitute for testing the full Supabase platform.
+**52 automated tests** cover bookkeeping, inventory, bulk recategorization, refunds, version conflicts, idempotent retries, RLS/direct-write rejection, local persistence and public-demo isolation. SQL runs in PGlite's PostgreSQL engine; this is not a substitute for testing the full Supabase platform.
 
 The original development deployment also passed real Supabase API checks, browser offline reloads, workbook export/reopening and mobile layout checks. These are development results, **not long-term shop acceptance or an independent security audit**. See [Verification](docs/VERIFICATION.md) and [Architecture](docs/ARCHITECTURE.md).
 

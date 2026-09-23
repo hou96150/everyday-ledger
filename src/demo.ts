@@ -3,6 +3,7 @@ import { makeRow, today, type Product, type Entry } from "./domain";
 
 /** Synthetic local records only. Never called by a household production build. */
 export async function seedPublicDemo() {
+  if (await db.meta.get("demoInitialized")) return;
   await db.transaction("rw", db.records, async () => {
     if (await db.records.count()) return;
     const catalog: Product[] = [

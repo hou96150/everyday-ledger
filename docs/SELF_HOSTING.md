@@ -10,9 +10,9 @@
 
 ### B. 建立自己的家庭雲端帳本
 
-每個家庭使用獨立 Supabase 專案與前端網址。不要將資料寫入作者的部署。本指南適用於**空白新專案**；兩份 SQL 不是可重複執行的更新腳本。
+每個家庭使用獨立 Supabase 專案與前端網址。不要將資料寫入作者的部署。本指南適用於**空白新專案**；基礎 schema／setup SQL 不是可重複執行的更新腳本。
 
-1. 在 Supabase 建立新專案。依序將 `supabase/schema.sql`、`supabase/setup.sql` 放入該專案 SQL Editor 執行。
+1. 在 Supabase 建立新專案。依序將 `supabase/schema.sql`、`supabase/setup.sql`、`supabase/backup.sql` 放入該專案 SQL Editor 執行。
 2. 在 Authentication 設定保留 Email/password 登入，關閉公開註冊（Allow new users to sign up）、匿名登入及不需要的登入提供者。開通函式使用管理 API 建立並確認帳號，不依賴公開註冊或真正寄信。
 3. 依官方 [CLI 安裝指南](https://supabase.com/docs/guides/local-development/cli/getting-started) 準備 CLI。先用 `supabase functions deploy --help` 確認版本支援的參數，再部署：
 
@@ -61,7 +61,7 @@ npx wrangler pages deploy dist --project-name YOUR_PAGES_NAME --branch main
 
 在 A、B 兩台裝置登入你的家庭帳號。先新增一個測試品項，確認另一台能讀取。A 斷網後登記一筆，等待「已儲存」再重開；恢復網路，B 應只看到一次。兩台修改同筆紀錄，應顯示衝突。下載 Excel 核對單店與合計；完成後將測試交易作廢、停用測試品項，保留稽核歷史。打烊時確認每台裝置無待同步紀錄。
 
-沒有內建完整備份還原；正式營業使用前，需自行建立並演練資料庫備份。Excel 匯出不能替代還原方案。
+「設定」提供手動完整備份與空白帳本還原，見 [備份指南](BACKUP.md)。既有部署只需新增執行 `supabase/backup.sql`，不要重跑 schema／setup。正式使用前以虛構資料演練；Excel 匯出不能替代還原方案。
 
 ### D. Fork 的公開試用網站
 
@@ -77,7 +77,7 @@ Follow the README quick start. Set `VITE_PUBLIC_DEMO=true` in `.env.local` to po
 
 Use a separate Supabase project and frontend URL per household. Never use the author's deployment. These instructions are for a **new, empty project**; the SQL files are not repeatable upgrade migrations.
 
-1. Create a Supabase project. Execute `supabase/schema.sql`, then `supabase/setup.sql`, in its SQL Editor.
+1. Create a Supabase project. Execute `supabase/schema.sql`, then `supabase/setup.sql` and `supabase/backup.sql`, in its SQL Editor.
 2. Keep Email/password login enabled, but disable public signups, anonymous sign-in and unused providers. Bootstrap uses the admin API to create a confirmed identity, without public signup or real email delivery.
 3. Install the CLI using the [official guide](https://supabase.com/docs/guides/local-development/cli/getting-started), inspect `supabase functions deploy --help`, and run:
 
@@ -117,7 +117,7 @@ References: [Supabase deployment](https://supabase.com/docs/guides/functions/dep
 
 Sign in on two actual devices. Add a test product and confirm the other device reads it. Disconnect A, save an entry and wait for confirmation before reopening. Reconnect; B should see the entry exactly once. Edit the same record on both devices and verify conflict handling. Export Excel and reconcile shop/combined totals. Void test transactions and deactivate the test product afterward, retaining history. Check every device for pending operations at closing time.
 
-There is no complete built-in backup/restore flow. Set up and rehearse database backups before relying on this for business records. Excel is not a restoration plan.
+Settings provides manual ledger backups and empty-ledger restore; see [Backup guide](BACKUP.md). Existing deployments should run only the additive `supabase/backup.sql`, not schema/setup again. Rehearse with fictional data before business use. Excel is not a restoration plan.
 
 ### D. Demo on a fork
 
