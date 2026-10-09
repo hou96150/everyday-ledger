@@ -245,3 +245,8 @@ Share a shop scenario, reproducible bug, or focused improvement through [Issues]
 If this helps you, a **Star** or a recommendation to another small-shop owner is appreciated. Concrete feedback helps shape the next release.
 
 See [licensing status](docs/LICENSING.md) for reuse terms.
+
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=hou96150/everyday-ledger&type=Date)](https://www.star-history.com/#hou96150/everyday-ledger&Date)
