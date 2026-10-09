@@ -249,4 +249,8 @@ See [licensing status](docs/LICENSING.md) for reuse terms.
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=hou96150/everyday-ledger&type=Date)](https://www.star-history.com/#hou96150/everyday-ledger&Date)
+[![Star History：縱軸固定 0～20 顆 / fixed 0–20 star scale](docs/images/star-history-2026-10-09-20.png)](https://www.star-history.com/#hou96150/everyday-ledger&Date)
+
+截至 2026-10-09 的靜態快照，縱軸固定為 0～20 顆，不會自動更新。點擊圖表可查看最新 Star History。[可編輯 SVG](docs/images/star-history-2026-10-09-20.svg)。
+
+Static snapshot as of 2026-10-09, with a fixed 0–20 star scale; it does not update automatically. Click the chart for the latest Star History. [Editable SVG](docs/images/star-history-2026-10-09-20.svg).
