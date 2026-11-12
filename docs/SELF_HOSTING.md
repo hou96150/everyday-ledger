@@ -12,7 +12,7 @@
 
 每個家庭使用獨立 Supabase 專案與前端網址。不要將資料寫入作者的部署。本指南適用於**空白新專案**；基礎 schema／setup SQL 不是可重複執行的更新腳本。
 
-1. 在 Supabase 建立新專案。依序將 `supabase/schema.sql`、`supabase/setup.sql`、`supabase/backup.sql` 放入該專案 SQL Editor 執行。
+1. 在 Supabase 建立新專案。依序將 `supabase/schema.sql`、`supabase/setup.sql`、`supabase/backup.sql`、`supabase/permissions.sql` 放入該專案 SQL Editor 執行。既有專案更新請依 [資料庫權限整理](DATABASE_PERMISSIONS.md) 套用未執行的 migration，不要重建 schema。
 2. 在 Authentication 設定保留 Email/password 登入，關閉公開註冊（Allow new users to sign up）、匿名登入及不需要的登入提供者。開通函式使用管理 API 建立並確認帳號，不依賴公開註冊或真正寄信。
 3. 依官方 [CLI 安裝指南](https://supabase.com/docs/guides/local-development/cli/getting-started) 準備 CLI。先用 `supabase functions deploy --help` 確認版本支援的參數，再部署：
 
@@ -77,7 +77,7 @@ Follow the README quick start. Set `VITE_PUBLIC_DEMO=true` in `.env.local` to po
 
 Use a separate Supabase project and frontend URL per household. Never use the author's deployment. These instructions are for a **new, empty project**; the SQL files are not repeatable upgrade migrations.
 
-1. Create a Supabase project. Execute `supabase/schema.sql`, then `supabase/setup.sql` and `supabase/backup.sql`, in its SQL Editor.
+1. Create a Supabase project. Execute `supabase/schema.sql`, `supabase/setup.sql`, `supabase/backup.sql`, then `supabase/permissions.sql` in its SQL Editor. For an existing project, apply only unapplied migrations as described in the [database permission guide](DATABASE_PERMISSIONS.md); do not recreate the schema.
 2. Keep Email/password login enabled, but disable public signups, anonymous sign-in and unused providers. Bootstrap uses the admin API to create a confirmed identity, without public signup or real email delivery.
 3. Install the CLI using the [official guide](https://supabase.com/docs/guides/local-development/cli/getting-started), inspect `supabase functions deploy --help`, and run:
 

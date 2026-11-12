@@ -115,7 +115,7 @@ npm run build
 npm run preview
 ```
 
-目前有 **52 個自動測試**，涵蓋收支、庫存、批次分類、退款、版本衝突、重送防重複、RLS／直接寫表拒絕、本機持久化與公開試用隔離。SQL 測試在 PGlite 的 PostgreSQL 引擎執行；它不等同於完整 Supabase 平台測試。
+目前有 **59 個自動測試**，涵蓋收支、庫存、批次分類、退款、版本衝突、重送防重複、RLS／直接寫表拒絕、本機持久化、公開試用隔離及資料庫權限矩陣。SQL 測試在 PGlite 的 PostgreSQL 引擎執行；它不等同於完整 Supabase 平台測試。正式資料庫權限更新與驗證見[權限整理說明](docs/DATABASE_PERMISSIONS.md)。
 
 原始部署也曾完成真實 Supabase API、瀏覽器離線重開、Excel 匯出後重新讀取與手機版面驗證。這些是開發驗證，**不代表已完成長期店內營運驗收或外部安全稽核**。見 [驗證與限制](docs/VERIFICATION.md)、[架構](docs/ARCHITECTURE.md)。
 
@@ -222,7 +222,7 @@ npm run build
 npm run preview
 ```
 
-**52 automated tests** cover bookkeeping, inventory, bulk recategorization, refunds, version conflicts, idempotent retries, RLS/direct-write rejection, local persistence and public-demo isolation. SQL runs in PGlite's PostgreSQL engine; this is not a substitute for testing the full Supabase platform.
+**59 automated tests** cover bookkeeping, inventory, bulk recategorization, refunds, version conflicts, idempotent retries, RLS/direct-write rejection, local persistence, public-demo isolation, and the database permission matrix. SQL runs in PGlite's PostgreSQL engine; this is not a substitute for testing the full Supabase platform. See the [database permission guide](docs/DATABASE_PERMISSIONS.md) for the production ACL migration and verification.
 
 The original development deployment also passed real Supabase API checks, browser offline reloads, workbook export/reopening and mobile layout checks. These are development results, **not long-term shop acceptance or an independent security audit**. See [Verification](docs/VERIFICATION.md) and [Architecture](docs/ARCHITECTURE.md).
 

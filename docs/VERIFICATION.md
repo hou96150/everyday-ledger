@@ -16,7 +16,7 @@
 | `sync.test.ts`    | 佇列到 PostgreSQL 的整合、批次分類同步、回應遺失重送、過期登入與衝突處理 |
 | `demo.test.ts`    | 公開模式禁用雲端 client；示範資料只植入一次且不覆蓋修改、不入上傳佇列    |
 
-目前合計 52 個測試。既有測試可能依同檔內順序建構情境；PGlite 提供資料庫引擎，並不包含完整 Supabase Auth 或 Edge runtime。
+目前合計 59 個測試。另以正式 Supabase 唯讀權限檢查與會完整回滾的虛構資料交易驗證權限與核心雲端操作，見[權限整理](DATABASE_PERMISSIONS.md)。既有測試可能依同檔內順序建構情境；PGlite 提供資料庫引擎，並不包含完整 Supabase Auth 或 Edge runtime。
 
 ### 開發時已驗證
 
@@ -36,7 +36,7 @@
 
 Updated on 2026-09-23. Reproducible tests, development checks and outstanding acceptance are intentionally separated.
 
-Run `npm ci`, `npm test`, and `npm run build`. CI repeats them for pushes and pull requests. The eight test files cover domain arithmetic/validation, atomic bulk recategorization, device persistence/history, SQL authorization and idempotency, outbox-to-PostgreSQL integration, repeated conflicts, expired sessions, and cloud-disabled demo seeding. There are currently 52 tests. Some database scenarios share ordered state; PGlite does not provide the complete Supabase Auth/Edge platform.
+Run `npm ci`, `npm test`, and `npm run build`. CI repeats them for pushes and pull requests. Nine test files cover domain arithmetic/validation, atomic bulk recategorization, device persistence/history, SQL authorization and idempotency, outbox-to-PostgreSQL integration, repeated conflicts, expired sessions, cloud-disabled demo seeding, and the database permission matrix. There are currently 59 tests. Production Supabase permission and rollback-only fictional-data checks are documented in [Database permissions](DATABASE_PERMISSIONS.md). Some database scenarios share ordered state; PGlite does not provide the complete Supabase Auth/Edge platform.
 
 Development verification included actual Supabase bootstrap/login, unauthorized rejection, idempotency, conflicts, purchases/payments, partial and excessive refunds, a second client, history and denied direct writes. Disposable QA records/accounts were cleaned up before household activation; this is not a claim about the current household database.
 
