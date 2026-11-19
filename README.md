@@ -28,7 +28,7 @@ An offline-capable ledger for the small shops that keep a family going.
 [開啟公開試用版 →](https://hou96150.github.io/everyday-ledger/)
 
 1. 畫面會載入示範商品。點一包咖啡豆，調整「實收金額」，完成記帳。
-2. 商品可切換「卡片／條列」；到「庫存管理」按分類篩選或勾選多個品項一起歸類。
+2. 商品銷售可切換「卡片／條列」，並依售價或庫存升降排序；庫存管理可按分類篩選或批次歸類。
 3. 看庫存數量變化，再切換「影印店」記一筆收入與備註。
 4. 在「營業報表」選兩店合計，匯出 Excel。
 
@@ -154,7 +154,7 @@ Everyday Ledger turns that situation into a small, working product: **record cof
 [Open the public demo →](https://hou96150.github.io/everyday-ledger/)
 
 1. Choose a sample coffee product, edit the amount actually received, and save a sale.
-2. Switch products between cards and compact rows; filter inventory and bulk-recategorize selected items.
+2. Switch between cards and compact rows and sort the sales catalog by price or stock in either direction. Filter inventory by category or recategorize items in bulk.
 3. Check the stock change. Switch to the print shop and record income with a note.
 4. Open reports, select both shops, and export an Excel workbook.
 

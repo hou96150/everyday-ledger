@@ -746,6 +746,7 @@ function Register({
   onNewProduct: () => void;
 }) {
   const [cart, setCart] = useState<Line[]>([]),
+    [sortOrder, setSortOrder] = useState("default"),
     [query, setQuery] = useState(""),
     [category, setCategory] = useState("全部"),
     [catalogView, setCatalogView] = useState<"cards" | "list">(() =>
@@ -775,6 +776,16 @@ function Register({
       (category === "全部" || category === (p.category.trim() || "未分類"))
     );
   });
+  const visible = filtered.map((row) => ({
+    row,
+    price: (row.data as Product).price,
+    quantity: stock(rows, row.id),
+  }));
+  if (sortOrder !== "default") {
+    const field = sortOrder.startsWith("price") ? "price" : "quantity";
+    const direction = sortOrder.endsWith("desc") ? -1 : 1;
+    visible.sort((a, b) => direction * (a[field] - b[field]));
+  }
   function setView(view: "cards" | "list") {
     setCatalogView(view);
     localStorage.setItem("ledger-catalog-view", view);
@@ -836,6 +847,19 @@ function Register({
         </div>
         <div className="catalogue-tools">
           <span>顯示 {filtered.length} 個品項</span>
+          <label>排序{" "}
+            <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value)}>
+              <option value="default">預設</option>
+              <optgroup label="售價">
+                <option value="price-desc">高到低</option>
+                <option value="price-asc">低到高</option>
+              </optgroup>
+              <optgroup label="庫存">
+                <option value="quantity-desc">多到少</option>
+                <option value="quantity-asc">少到多</option>
+              </optgroup>
+            </select>
+          </label>
           <div className="view-switch" role="group" aria-label="商品顯示方式">
             <button
               type="button"
@@ -858,9 +882,8 @@ function Register({
         <div
           className={catalogView === "cards" ? "product-grid" : "product-list"}
         >
-          {filtered.map((r) => {
-            const p = r.data as Product,
-              n = stock(rows, r.id);
+          {visible.map(({ row: r, quantity: n }) => {
+            const p = r.data as Product;
             return (
               <button
                 type="button"
