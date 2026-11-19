@@ -64,6 +64,7 @@ import {
 } from "./domain";
 import { exportExcel } from "./export";
 import { AuthForm } from "./Auth";
+import { sortInstantSeries } from "./instant-series";
 type Page = "register" | "journal" | "inventory" | "reports" | "settings";
 const nav: { id: Page; name: string; icon: typeof Coffee }[] = [
   { id: "register", name: "記一筆", icon: Plus },
@@ -747,6 +748,7 @@ function Register({
 }) {
   const [cart, setCart] = useState<Line[]>([]),
     [sortOrder, setSortOrder] = useState("default"),
+    [instantSortOrder, setInstantSortOrder] = useState("series"),
     [query, setQuery] = useState(""),
     [category, setCategory] = useState("全部"),
     [catalogView, setCatalogView] = useState<"cards" | "list">(() =>
@@ -776,14 +778,18 @@ function Register({
       (category === "全部" || category === (p.category.trim() || "未分類"))
     );
   });
-  const visible = filtered.map((row) => ({
+  const isInstant = category === "即溶";
+  const selectedSort = isInstant ? instantSortOrder : sortOrder;
+  let visible = filtered.map((row) => ({
     row,
     price: (row.data as Product).price,
     quantity: stock(rows, row.id),
   }));
-  if (sortOrder !== "default") {
-    const field = sortOrder.startsWith("price") ? "price" : "quantity";
-    const direction = sortOrder.endsWith("desc") ? -1 : 1;
+  if (selectedSort === "series") {
+    visible = sortInstantSeries(visible, ({ row }) => (row.data as Product).name);
+  } else if (selectedSort !== "default") {
+    const field = selectedSort.startsWith("price") ? "price" : "quantity";
+    const direction = selectedSort.endsWith("desc") ? -1 : 1;
     visible.sort((a, b) => direction * (a[field] - b[field]));
   }
   function setView(view: "cards" | "list") {
@@ -848,7 +854,11 @@ function Register({
         <div className="catalogue-tools">
           <span>顯示 {filtered.length} 個品項</span>
           <label>排序{" "}
-            <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value)}>
+            <select
+              value={selectedSort}
+              onChange={(e) => (isInstant ? setInstantSortOrder : setSortOrder)(e.target.value)}
+            >
+              {isInstant && <option value="series">依系列</option>}
               <option value="default">預設</option>
               <optgroup label="售價">
                 <option value="price-desc">高到低</option>
